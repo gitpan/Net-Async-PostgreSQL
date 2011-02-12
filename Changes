@@ -1,0 +1,4 @@
+0.001     2011-02-12 12:44:52 Europe/London
+	Preliminary release to CPAN. Only supports the basic query interface and no type handling
+	yet, but allows basic queries and connection via plaintext or MD5.
+
