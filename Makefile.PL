@@ -23,7 +23,7 @@ my %WriteMakefileArgs = (
     'IO::Async' => '0.36',
     'Protocol::PostgreSQL' => '0.001'
   },
-  'VERSION' => '0.001',
+  'VERSION' => '0.002',
   'test' => {
     'TESTS' => 't/*.t'
   }

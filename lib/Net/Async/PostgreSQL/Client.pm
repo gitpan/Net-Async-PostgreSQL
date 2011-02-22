@@ -1,7 +1,7 @@
 package Net::Async::PostgreSQL::Client;
 use strict;
 use warnings;
-use Protocol::PostgreSQL::Client '0.001';
+use Protocol::PostgreSQL::Client '0.005';
 use parent qw{IO::Async::Protocol::Stream Protocol::PostgreSQL::Client};
 
 =head1 NAME
@@ -187,8 +187,9 @@ sub on_read {
 	my ($code, $size) = unpack('C1N1', $$buffref);
 	if(length($$buffref) >= $size+1) {
 		$self->handle_message(substr $$buffref, 0, $size+1, '');
+		return 1;
 	}
-	return 1;
+	return 0;
 }
 
 =head2 do

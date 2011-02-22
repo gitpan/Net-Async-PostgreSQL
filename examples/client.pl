@@ -1,3 +1,4 @@
+#!/usr/bin/perl
 use strict;
 use warnings;
 
@@ -22,9 +23,9 @@ my @query_list = (
 	q{insert into nap_test.nap_1 (name, creation) values ('test', 'now')},
 	q{insert into nap_test.nap_1 (name, creation) values ('test2', 'now')},
 	q{select * from nap_test.nap_1},
-	q{rollback},
 );
 my $init = 0;
+my $finished = 0;
 my %status;
 $client->attach_event(
 	error	=> sub {
@@ -33,14 +34,35 @@ $client->attach_event(
 		my $err = $args{error};
 		warn "$_ => " . $err->{$_} . "\n" for sort keys %$err;
 	},
+	command_complete => sub {
+		my $self = shift;
+	},
+	copy_in_response => sub {
+		my ($self, %args) = @_;
+		$self->copy_data("some name\t2010-01-01 00:00:00");
+		++$finished;
+		$self->copy_done;
+	},
 	ready_for_query => sub {
 		my $self = shift;
 		unless($init) {
 			print "Server version " . $status{server_version} . "\n";
 			++$init;
 		}
-		my $q = shift(@query_list) or return $loop->loop_stop;
-		$self->simple_query($q);
+		my $q = shift(@query_list);
+		if($finished == 1) {
+			$self->simple_query(q{select * from nap_test.nap_1});
+			++$finished;
+			return;
+		} elsif($finished == 2) {
+			$loop->loop_stop;
+		}
+
+		if($q) {
+			$self->simple_query($q);
+		} else {
+			$self->simple_query(q{copy nap_test.nap_1 (name,creation) from stdin});
+		}
 	},
 	parameter_status => sub {
 		my $self = shift;
