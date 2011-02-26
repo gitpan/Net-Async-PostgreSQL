@@ -1,4 +1,7 @@
 package Net::Async::PostgreSQL::Client;
+BEGIN {
+  $Net::Async::PostgreSQL::Client::VERSION = '0.003';
+}
 use strict;
 use warnings;
 use Protocol::PostgreSQL::Client '0.005';
@@ -7,6 +10,10 @@ use parent qw{IO::Async::Protocol::Stream Protocol::PostgreSQL::Client};
 =head1 NAME
 
 Net::Async::PostgreSQL - support for the PostgreSQL wire protocol
+
+=head1 VERSION
+
+version 0.003
 
 =head1 SYNOPSIS
 
@@ -230,4 +237,3 @@ Tom Molesworth <cpan@entitymodel.com>
 =head1 LICENSE
 
 Copyright Tom Molesworth 2011. Licensed under the same terms as Perl itself.
-

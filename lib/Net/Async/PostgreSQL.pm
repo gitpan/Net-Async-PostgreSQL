@@ -2,11 +2,15 @@ package Net::Async::PostgreSQL;
 # ABSTRACT: PostgreSQL database support for IO::Async
 use strict;
 use warnings;
-our $VERSION = '0.002';
+our $VERSION = '0.003';
 
 =head1 NAME
 
-Net::Async::PostgreSQL - support for the PostgreSQL wire protocol
+Net::Async::PostgreSQL - (preliminary) asynchronous PostgreSQL support for L<IO::Async>
+
+=head1 VERSION
+
+version 0.003
 
 =head1 SYNOPSIS
 
@@ -24,13 +28,13 @@ Net::Async::PostgreSQL - support for the PostgreSQL wire protocol
  );
  $client->init;
 
- $client->attach_event(
- 	error	=> sub {
+ $client->configure(
+ 	on_error	=> sub {
  		my ($self, %args) = @_;
  		my $err = $args{error};
  		warn "$_ => " . $err->{$_} . "\n" for sort keys %$err;
  	},
- 	ready_for_query => sub {
+ 	on_ready_for_query => sub {
  		my $self = shift;
  		unless($init) {
  			print "Server version " . $status{server_version} . "\n";
@@ -45,17 +49,17 @@ Net::Async::PostgreSQL - support for the PostgreSQL wire protocol
                  }
  		$sth->bind("some more data");
  	},
- 	parameter_status => sub {
+ 	on_parameter_status => sub {
  		my $self = shift;
  		my %args = @_;
  		$status{$_} = $args{status}->{$_} for sort keys %{$args{status}};
  	},
- 	row_description => sub {
+ 	on_row_description => sub {
  		my $self = shift;
  		my %args = @_;
  		print '[' . join(' ', map { $_->{name} } @{$args{description}{field}}) . "]\n";
  	},
- 	data_row => sub {
+ 	on_data_row => sub {
  		my $self = shift;
  		my %args = @_;
  		print '[' . join(',', map { $_->{data} } @{$args{row}}) . "]\n";
@@ -83,4 +87,3 @@ Tom Molesworth <cpan@entitymodel.com>
 =head1 LICENSE
 
 Copyright Tom Molesworth 2011. Licensed under the same terms as Perl itself.
-

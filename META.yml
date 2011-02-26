@@ -14,5 +14,6 @@ meta-spec:
 name: Net-Async-PostgreSQL
 requires:
   IO::Async: 0.36
-  Protocol::PostgreSQL: 0.001
-version: 0.002
+  Protocol::PostgreSQL: 0.006
+  parent: 0
+version: 0.003

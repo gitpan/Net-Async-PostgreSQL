@@ -1,3 +1,6 @@
+0.003     2011-02-26 19:01:57 Europe/London
+	Update synopsis to use ->configure and increase minimum version requirement.
+
 0.002     2011-02-22 20:49:19 Europe/London
 	Fix a nasty packet-boundary bug and chuck in a synopsis.
 

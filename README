@@ -1,7 +1,7 @@
 
 
 This archive contains the distribution Net-Async-PostgreSQL,
-version 0.002:
+version 0.003:
 
   PostgreSQL database support for IO::Async
 

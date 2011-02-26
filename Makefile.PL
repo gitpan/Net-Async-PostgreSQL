@@ -21,9 +21,10 @@ my %WriteMakefileArgs = (
   'NAME' => 'Net::Async::PostgreSQL',
   'PREREQ_PM' => {
     'IO::Async' => '0.36',
-    'Protocol::PostgreSQL' => '0.001'
+    'Protocol::PostgreSQL' => '0.006',
+    'parent' => '0'
   },
-  'VERSION' => '0.002',
+  'VERSION' => '0.003',
   'test' => {
     'TESTS' => 't/*.t'
   }
