@@ -1,3 +1,7 @@
+0.004     2011-06-11 17:44:06 Europe/London
+	Pass through service parameter so that we can connect to ports other than the default 5432.
+	Provide a ->terminate method for clean shutdown.
+
 0.003     2011-02-26 19:01:57 Europe/London
 	Update synopsis to use ->configure and increase minimum version requirement.
 

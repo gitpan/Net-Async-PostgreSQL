@@ -14,7 +14,7 @@ my $client = Net::Async::PostgreSQL::Client->new(
 	user			=> $ENV{NET_ASYNC_POSTGRESQL_USER},
 	pass			=> $ENV{NET_ASYNC_POSTGRESQL_PASS},
 );
-$client->init;
+#$client->init;
 
 my @query_list = (
 	q{begin work},
@@ -30,27 +30,33 @@ my %status;
 $client->attach_event(
 	error	=> sub {
 		my ($self, %args) = @_;
-		warn "had error";
+		print "Received error\n";
 		my $err = $args{error};
 		warn "$_ => " . $err->{$_} . "\n" for sort keys %$err;
 	},
 	command_complete => sub {
 		my $self = shift;
+		print "Command complete\n";
+		warn $finished;
+		$loop->loop_stop if $finished == 2;
 	},
 	copy_in_response => sub {
 		my ($self, %args) = @_;
+		print "Copy in response\n";
 		$self->copy_data("some name\t2010-01-01 00:00:00");
 		++$finished;
 		$self->copy_done;
 	},
 	ready_for_query => sub {
 		my $self = shift;
+		print "Ready for query\n";
 		unless($init) {
 			print "Server version " . $status{server_version} . "\n";
 			++$init;
 		}
 		my $q = shift(@query_list);
 		if($finished == 1) {
+			print "run query\n";
 			$self->simple_query(q{select * from nap_test.nap_1});
 			++$finished;
 			return;
@@ -66,16 +72,19 @@ $client->attach_event(
 	},
 	parameter_status => sub {
 		my $self = shift;
+		print "Parameter status\n";
 		my %args = @_;
 		$status{$_} = $args{status}->{$_} for sort keys %{$args{status}};
 	},
 	row_description => sub {
 		my $self = shift;
+		print "Row description\n";
 		my %args = @_;
 		print '[' . join(' ', map { $_->{name} } @{$args{description}{field}}) . "]\n";
 	},
 	data_row => sub {
 		my $self = shift;
+		print "Data row\n";
 		my %args = @_;
 		print '[' . join(',', map { $_->{data} } @{$args{row}}) . "]\n";
 	}

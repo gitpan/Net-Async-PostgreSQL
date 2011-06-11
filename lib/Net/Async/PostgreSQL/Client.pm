@@ -1,11 +1,12 @@
 package Net::Async::PostgreSQL::Client;
 BEGIN {
-  $Net::Async::PostgreSQL::Client::VERSION = '0.003';
+  $Net::Async::PostgreSQL::Client::VERSION = '0.004';
 }
 use strict;
 use warnings;
 use Protocol::PostgreSQL::Client '0.005';
 use parent qw{IO::Async::Protocol::Stream Protocol::PostgreSQL::Client};
+use Scalar::Util ();
 
 =head1 NAME
 
@@ -13,7 +14,7 @@ Net::Async::PostgreSQL - support for the PostgreSQL wire protocol
 
 =head1 VERSION
 
-version 0.003
+version 0.004
 
 =head1 SYNOPSIS
 
@@ -57,6 +58,8 @@ version 0.003
 The interface is provided by L<Net::Async::DBI>, which attempts to offer something close to
 L<DBI> but with support for event-based request handling.
 
+See L<Protocol::PostgreSQL> for more details.
+
 =cut
 
 use Socket qw(SOCK_STREAM);
@@ -99,6 +102,7 @@ sub configure {
 		$self->{$_} = delete $args{$_} if exists $args{$_};
 	}
 
+	Protocol::PostgreSQL::configure($self, %args);
 	$self->SUPER::configure(%args);
 }
 
@@ -152,7 +156,7 @@ sub connect {
 	my $on_connected = delete $args{on_connected};
 	my $host = exists $args{host} ? delete $args{host} : $self->{host};
 	$self->SUPER::connect(
-		service		=> 5432,
+		service		=> $args{service} || $self->{service} || 5432,
 		%args,
 		host		=> $host,
 		socktype	=> SOCK_STREAM,
@@ -214,6 +218,29 @@ sub do {
 sub on_password {
 	my $self = shift;
 	$self->send_message('PasswordMessage', password => $self->{pass});
+}
+
+=head2 terminate
+
+Sends the Terminate message to the database server and closes the connection for a clean
+shutdown.
+
+=cut
+
+sub terminate {
+	my $self = shift;
+	return unless $self->transport;
+
+	my $transport = $self->transport;
+	Scalar::Util::weaken(my $loop = $transport->get_loop);
+	# TODO could just ->close_when_empty?
+	$transport->configure(on_outgoing_empty => $self->_capture_weakself(sub {
+		my $self = shift;
+		$self->close;
+		$loop->later(sub { $loop->loop_stop; });
+	}));
+	$self->send_message('Terminate');
+	return $self;
 }
 
 1;

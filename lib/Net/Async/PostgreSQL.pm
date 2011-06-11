@@ -2,7 +2,7 @@ package Net::Async::PostgreSQL;
 # ABSTRACT: PostgreSQL database support for IO::Async
 use strict;
 use warnings;
-our $VERSION = '0.003';
+our $VERSION = '0.004';
 
 =head1 NAME
 
@@ -10,7 +10,7 @@ Net::Async::PostgreSQL - (preliminary) asynchronous PostgreSQL support for L<IO:
 
 =head1 VERSION
 
-version 0.003
+version 0.004
 
 =head1 SYNOPSIS
 

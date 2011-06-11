@@ -4,7 +4,7 @@ use warnings;
 
 
 
-use ExtUtils::MakeMaker 6.31;
+use ExtUtils::MakeMaker 6.30;
 
 
 
@@ -13,7 +13,7 @@ my %WriteMakefileArgs = (
   'AUTHOR' => 'Tom Molesworth <cpan@entitymodel.com>',
   'BUILD_REQUIRES' => {},
   'CONFIGURE_REQUIRES' => {
-    'ExtUtils::MakeMaker' => '6.31'
+    'ExtUtils::MakeMaker' => '6.30'
   },
   'DISTNAME' => 'Net-Async-PostgreSQL',
   'EXE_FILES' => [],
@@ -21,10 +21,10 @@ my %WriteMakefileArgs = (
   'NAME' => 'Net::Async::PostgreSQL',
   'PREREQ_PM' => {
     'IO::Async' => '0.36',
-    'Protocol::PostgreSQL' => '0.006',
+    'Protocol::PostgreSQL' => '0.007',
     'parent' => '0'
   },
-  'VERSION' => '0.003',
+  'VERSION' => '0.004',
   'test' => {
     'TESTS' => 't/*.t'
   }

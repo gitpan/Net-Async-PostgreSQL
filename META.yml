@@ -4,9 +4,9 @@ author:
   - 'Tom Molesworth <cpan@entitymodel.com>'
 build_requires: {}
 configure_requires:
-  ExtUtils::MakeMaker: 6.31
+  ExtUtils::MakeMaker: 6.30
 dynamic_config: 0
-generated_by: 'Dist::Zilla version 4.200004, CPAN::Meta::Converter version 2.110440'
+generated_by: 'Dist::Zilla version 4.200006, CPAN::Meta::Converter version 2.110930'
 license: perl
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.4.html
@@ -14,6 +14,6 @@ meta-spec:
 name: Net-Async-PostgreSQL
 requires:
   IO::Async: 0.36
-  Protocol::PostgreSQL: 0.006
+  Protocol::PostgreSQL: 0.007
   parent: 0
-version: 0.003
+version: 0.004
