@@ -14,7 +14,6 @@ my $client = Net::Async::PostgreSQL::Client->new(
 	user			=> $ENV{NET_ASYNC_POSTGRESQL_USER},
 	pass			=> $ENV{NET_ASYNC_POSTGRESQL_PASS},
 );
-#$client->init;
 
 my @query_list = (
 	q{begin work},
@@ -27,66 +26,90 @@ my @query_list = (
 my $init = 0;
 my $finished = 0;
 my %status;
-$client->attach_event(
+$client->add_handler_for_event(
 	error	=> sub {
 		my ($self, %args) = @_;
 		print "Received error\n";
 		my $err = $args{error};
 		warn "$_ => " . $err->{$_} . "\n" for sort keys %$err;
+		return 1;
 	},
 	command_complete => sub {
 		my $self = shift;
 		print "Command complete\n";
 		warn $finished;
-		$loop->loop_stop if $finished == 2;
+		if($finished == 1) {
+			print "run query\n";
+			$self->simple_query(q{select * from nap_test.nap_1});
+			++$finished;
+			return 1;
+		} elsif($finished == 2) {
+			$self->add_handler_for_event(
+				ready_for_query => sub {
+					$client->add_handler_for_event(
+						closed => sub {
+							$loop->later(sub {
+								$loop->loop_stop;
+							});
+							return 0;
+						}
+					);
+					$client->terminate;
+					0;
+				}
+			);
+			$self->simple_query(q{rollback});
+			return 0;
+		}
+
+		return 1;
 	},
 	copy_in_response => sub {
 		my ($self, %args) = @_;
 		print "Copy in response\n";
 		$self->copy_data("some name\t2010-01-01 00:00:00");
-		++$finished;
-		$self->copy_done;
+		$loop->later(sub {
+			++$finished;
+			$self->copy_done;
+		});
+		return 0;
 	},
 	ready_for_query => sub {
 		my $self = shift;
 		print "Ready for query\n";
+		return if $finished;
 		unless($init) {
 			print "Server version " . $status{server_version} . "\n";
 			++$init;
 		}
 		my $q = shift(@query_list);
-		if($finished == 1) {
-			print "run query\n";
-			$self->simple_query(q{select * from nap_test.nap_1});
-			++$finished;
-			return;
-		} elsif($finished == 2) {
-			$loop->loop_stop;
-		}
-
 		if($q) {
 			$self->simple_query($q);
 		} else {
 			$self->simple_query(q{copy nap_test.nap_1 (name,creation) from stdin});
 		}
+		return 1;
 	},
 	parameter_status => sub {
 		my $self = shift;
-		print "Parameter status\n";
 		my %args = @_;
 		$status{$_} = $args{status}->{$_} for sort keys %{$args{status}};
+		print "Parameter status: $_ => " . $args{status}->{$_} . "\n" for sort keys %{$args{status}};
+		return 1;
 	},
 	row_description => sub {
 		my $self = shift;
 		print "Row description\n";
 		my %args = @_;
 		print '[' . join(' ', map { $_->{name} } @{$args{description}{field}}) . "]\n";
+		return 1;
 	},
 	data_row => sub {
 		my $self = shift;
 		print "Data row\n";
 		my %args = @_;
 		print '[' . join(',', map { $_->{data} } @{$args{row}}) . "]\n";
+		return 1;
 	}
 );
 $loop->add($client);

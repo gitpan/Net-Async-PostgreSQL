@@ -1,11 +1,11 @@
 package Net::Async::PostgreSQL::Client;
 BEGIN {
-  $Net::Async::PostgreSQL::Client::VERSION = '0.004';
+  $Net::Async::PostgreSQL::Client::VERSION = '0.005';
 }
 use strict;
 use warnings;
-use Protocol::PostgreSQL::Client '0.005';
-use parent qw{IO::Async::Protocol::Stream Protocol::PostgreSQL::Client};
+use Protocol::PostgreSQL::Client '0.008';
+use parent qw{IO::Async::Protocol::Stream};
 use Scalar::Util ();
 
 =head1 NAME
@@ -14,7 +14,7 @@ Net::Async::PostgreSQL - support for the PostgreSQL wire protocol
 
 =head1 VERSION
 
-version 0.004
+version 0.005
 
 =head1 SYNOPSIS
 
@@ -64,6 +64,36 @@ See L<Protocol::PostgreSQL> for more details.
 
 use Socket qw(SOCK_STREAM);
 
+BEGIN {
+	foreach my $k (qw(
+		send_message
+		has_queued
+		is_authenticated
+		is_first_message
+		initial_request
+		queue
+		send_next_in_queue
+		message
+		debug
+		handle_message
+		message_length
+		simple_query
+		copy_data
+		copy_done
+		backend_state
+		active_statement
+		prepare
+		prepare_async
+		row_description
+		is_ready
+		send_copy_data
+		add_handler_for_event
+	)) {
+		no strict 'refs';
+		*{join '::', __PACKAGE__, $k} = sub { shift->pg->$k(@_) };
+	}
+}
+
 =head1 METHODS
 
 =cut
@@ -76,11 +106,23 @@ sub new {
 	my $loop = delete $args{loop};
 
 # Want the IO::Async::Protocol constructor, so SUPER is good enough for us here
-	my $self = $class->SUPER::new( %args );
+	my $self = $class->SUPER::new;
+	$self->pg->add_handler_for_event(send_request => $self->_capture_weakself(sub {
+		my ($self) = splice @_, 0, 2; # ignore pg object
+		$self->write(@_);
+		return 1;
+	}));
+	$self->configure(%args);
 
 # Automatically add to the event loop if we were passed one
 	$loop->add($self) if $loop;
 	return $self;
+}
+
+sub sap {
+	my ($self, $sub) = @_;
+	Scalar::Util::weaken $self;
+	return sub { $self->$sub(@_); };
 }
 
 =head2 configure
@@ -94,16 +136,25 @@ sub configure {
 	my %args = @_;
 
 # Debug flag is used to control the copious amounts of data that we dump out when tracing
-	if(exists $args{debug}) {
-		$self->{debug} = delete $args{debug};
-	}
+	$self->{debug} = $args{debug} if exists $args{debug};
 
-	foreach (qw{host service user pass database ssl tls}) {
+#	%args = $self->pg->configure(%args);
+	foreach (qw{host service}) {
 		$self->{$_} = delete $args{$_} if exists $args{$_};
 	}
-
-	Protocol::PostgreSQL::configure($self, %args);
+	%args = $self->pg->configure(%args);
 	$self->SUPER::configure(%args);
+	return $self;
+}
+
+sub pg {
+	my $self = shift;
+	if(@_) {
+		$self->{pg} = shift;
+		return $self;
+	}
+	$self->{pg} ||= Protocol::PostgreSQL::Client->new;
+	return $self->{pg};
 }
 
 =head2 on_connection_established
@@ -155,9 +206,14 @@ sub connect {
 
 	my $on_connected = delete $args{on_connected};
 	my $host = exists $args{host} ? delete $args{host} : $self->{host};
+	$self->pg->add_handler_for_event(password => sub {
+		my $self = shift;
+		$self->send_message('PasswordMessage', password => $self->{pass});
+		return 0; # single-shot event
+	});
 	$self->SUPER::connect(
-		service		=> $args{service} || $self->{service} || 5432,
 		%args,
+		service		=> $args{service} || $self->{service} || 5432,
 		host		=> $host,
 		socktype	=> SOCK_STREAM,
 		on_resolve_error => sub {
@@ -166,23 +222,13 @@ sub connect {
 		on_connect_error => sub {
 			die "Could not connect to $host";
 		},
-		on_connected => sub {
-			my ($self, $sock) = @_;
-			$self->initial_request;
+		on_connected => $self->sap(sub {
+			my $self = shift;
+			my ($pg, $sock) = @_;
+			$self->pg->initial_request;
 			$on_connected->($self) if $on_connected;
-		}
+		})
 	);
-}
-
-=head2 on_send_request
-
-Send data to the server.
-
-=cut
-
-sub on_send_request {
-	my $self = shift;
-	$self->write(@_);
 }
 
 =head2 on_read
@@ -197,7 +243,7 @@ sub on_read {
 	return 0 unless length($$buffref) >= 5;
 	my ($code, $size) = unpack('C1N1', $$buffref);
 	if(length($$buffref) >= $size+1) {
-		$self->handle_message(substr $$buffref, 0, $size+1, '');
+		$self->pg->handle_message(substr $$buffref, 0, $size+1, '');
 		return 1;
 	}
 	return 0;
@@ -217,7 +263,6 @@ sub do {
 
 sub on_password {
 	my $self = shift;
-	$self->send_message('PasswordMessage', password => $self->{pass});
 }
 
 =head2 terminate
@@ -237,7 +282,7 @@ sub terminate {
 	$transport->configure(on_outgoing_empty => $self->_capture_weakself(sub {
 		my $self = shift;
 		$self->close;
-		$loop->later(sub { $loop->loop_stop; });
+		$loop->later($self->_capture_weakself(sub { $self->pg->invoke_event('closed'); }));
 	}));
 	$self->send_message('Terminate');
 	return $self;

@@ -13,7 +13,7 @@ my $client = Net::Async::PostgreSQL::Client->new(
 	debug			=> 0 && sub { warn "@_" },
 	host			=> $ENV{NET_ASYNC_POSTGRESQL_SERVER} || 'localhost',
 	service			=> $port,
-	ssl			=> 1,
+#	ssl			=> 1,
 	database		=> $ENV{NET_ASYNC_POSTGRESQL_DATABASE},
 	user			=> $ENV{NET_ASYNC_POSTGRESQL_USER},
 	pass			=> $ENV{NET_ASYNC_POSTGRESQL_PASS},
@@ -48,8 +48,8 @@ my $rfq = sub {
 		return;
 	} elsif($finished == 3) {
 		$loop->later(sub {
-			$self->transport->configure(on_outgoing_empty => sub {
-				$self->close;
+			$client->transport->configure(on_outgoing_empty => sub {
+				$client->close;
 				$loop->later(sub { $loop->loop_stop; });
 			});
 			$self->send_message('Terminate');
@@ -61,44 +61,50 @@ my $rfq = sub {
 	$self->simple_query(q{copy nap_test.nap_1 (name,creation, id1, id2, k1, k2) from stdin});
 	return;
 };
-$client->attach_event(
+$client->add_handler_for_event(
 	error	=> sub {
 		my ($self, %args) = @_;
 		print "Received error\n";
 		my $err = $args{error};
 		warn "$_ => " . $err->{$_} . "\n" for sort keys %$err;
+		return 1;
 	},
 	command_complete => sub {
 		my $self = shift;
+		return 1;
 	},
 	copy_in_response => sub {
 		my ($self, %args) = @_;
 		my $k1 = 'aaaaaaaaaaa';
-		$self->send_copy_data(['some name', '2010-01-01 00:00:00', int(rand() * 10_000_000), $$ ^ time, ++$k1, localtime() . {} ]) for 0..100_000;
+		$self->send_copy_data(['some name', '2010-01-01 00:00:00', int(rand() * 10_000_000), $$ ^ time, ++$k1, localtime() . {} ]) for 0..10_000;
 		++$finished;
 		$self->copy_done;
+		return 1;
 #		$self->attach_event(ready_for_query => $rfq);
 	},
-	ready_for_query => $rfq,
+	ready_for_query => sub { $rfq->(@_); return 1; },
 	parameter_status => sub {
 		my $self = shift;
 		my %args = @_;
 		$status{$_} = $args{status}->{$_} for sort keys %{$args{status}};
+		return 1;
 	},
 	row_description => sub {
 		my $self = shift;
 		my %args = @_;
+		return 1;
 	},
 	data_row => sub {
 		my $self = shift;
 		my %args = @_;
+		return 1;
 	},
 );
 $loop->add($client);
 $client->connect;
 $loop->loop_forever;
 };
-timethese(1, {
+timethese(10, {
 	5432	=> sub { $code->(5432, @_) },
 	6432	=> sub { $code->(6432, @_) }
 });

@@ -1,3 +1,9 @@
+0.005     2011-07-16 22:43:10 Europe/London
+	Support new event handling brought in by Protocol::PostgreSQL 0.008
+	Moved Protocol::PostgreSQL::Client into an attribute rather than an ancestor
+	of our class, so we now proxy most of the methods through including
+	->add_handler_for_event
+
 0.004     2011-06-11 17:44:06 Europe/London
 	Pass through service parameter so that we can connect to ports other than the default 5432.
 	Provide a ->terminate method for clean shutdown.
