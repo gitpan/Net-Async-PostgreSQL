@@ -2,11 +2,12 @@
 abstract: 'PostgreSQL database support for IO::Async'
 author:
   - 'Tom Molesworth <cpan@entitymodel.com>'
-build_requires: {}
+build_requires:
+  Test::postgresql: 0.09
 configure_requires:
   ExtUtils::MakeMaker: 6.30
 dynamic_config: 0
-generated_by: 'Dist::Zilla version 4.200009, CPAN::Meta::Converter version 2.110930001'
+generated_by: 'Dist::Zilla version 4.300002, CPAN::Meta::Converter version 2.112621'
 license: perl
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.4.html
@@ -16,4 +17,4 @@ requires:
   IO::Async: 0.36
   Protocol::PostgreSQL: 0.008
   parent: 0
-version: 0.005
+version: 0.006

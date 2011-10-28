@@ -9,24 +9,26 @@ use ExtUtils::MakeMaker 6.30;
 
 
 my %WriteMakefileArgs = (
-  'ABSTRACT' => 'PostgreSQL database support for IO::Async',
-  'AUTHOR' => 'Tom Molesworth <cpan@entitymodel.com>',
-  'BUILD_REQUIRES' => {},
-  'CONFIGURE_REQUIRES' => {
-    'ExtUtils::MakeMaker' => '6.30'
+  "ABSTRACT" => "PostgreSQL database support for IO::Async",
+  "AUTHOR" => "Tom Molesworth <cpan\@entitymodel.com>",
+  "BUILD_REQUIRES" => {
+    "Test::postgresql" => "0.09"
   },
-  'DISTNAME' => 'Net-Async-PostgreSQL',
-  'EXE_FILES' => [],
-  'LICENSE' => 'perl',
-  'NAME' => 'Net::Async::PostgreSQL',
-  'PREREQ_PM' => {
-    'IO::Async' => '0.36',
-    'Protocol::PostgreSQL' => '0.008',
-    'parent' => '0'
+  "CONFIGURE_REQUIRES" => {
+    "ExtUtils::MakeMaker" => "6.30"
   },
-  'VERSION' => '0.005',
-  'test' => {
-    'TESTS' => 't/*.t'
+  "DISTNAME" => "Net-Async-PostgreSQL",
+  "EXE_FILES" => [],
+  "LICENSE" => "perl",
+  "NAME" => "Net::Async::PostgreSQL",
+  "PREREQ_PM" => {
+    "IO::Async" => "0.36",
+    "Protocol::PostgreSQL" => "0.008",
+    "parent" => 0
+  },
+  "VERSION" => "0.006",
+  "test" => {
+    "TESTS" => "t/*.t"
   }
 );
 

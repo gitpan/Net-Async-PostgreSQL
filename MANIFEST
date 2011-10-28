@@ -11,3 +11,4 @@ lib/Net/Async/PostgreSQL.pm
 lib/Net/Async/PostgreSQL/Client.pm
 t/00-pod.t
 t/00-use.t
+t/basic.t

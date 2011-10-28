@@ -1,3 +1,10 @@
+0.006     2011-10-28 04:19:11 Europe/London
+	Set up local PostgreSQL instance via Test::postgresql so we can run proper tests against
+	a server rather than just checking method handling basics. Big thanks to Kazuho Oku for
+	providing the Test::postgresql module, and Matt Trout for directing me to it.
+
+	No functional changes here.
+
 0.005     2011-07-16 22:43:10 Europe/London
 	Support new event handling brought in by Protocol::PostgreSQL 0.008
 	Moved Protocol::PostgreSQL::Client into an attribute rather than an ancestor
