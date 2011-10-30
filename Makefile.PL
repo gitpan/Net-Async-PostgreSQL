@@ -11,9 +11,7 @@ use ExtUtils::MakeMaker 6.30;
 my %WriteMakefileArgs = (
   "ABSTRACT" => "PostgreSQL database support for IO::Async",
   "AUTHOR" => "Tom Molesworth <cpan\@entitymodel.com>",
-  "BUILD_REQUIRES" => {
-    "Test::postgresql" => "0.09"
-  },
+  "BUILD_REQUIRES" => {},
   "CONFIGURE_REQUIRES" => {
     "ExtUtils::MakeMaker" => "6.30"
   },
@@ -26,7 +24,7 @@ my %WriteMakefileArgs = (
     "Protocol::PostgreSQL" => "0.008",
     "parent" => 0
   },
-  "VERSION" => "0.006",
+  "VERSION" => "0.007",
   "test" => {
     "TESTS" => "t/*.t"
   }

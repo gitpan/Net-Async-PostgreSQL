@@ -1,6 +1,6 @@
 package Net::Async::PostgreSQL::Client;
 {
-  $Net::Async::PostgreSQL::Client::VERSION = '0.006';
+  $Net::Async::PostgreSQL::Client::VERSION = '0.007';
 }
 use strict;
 use warnings;
@@ -14,7 +14,7 @@ Net::Async::PostgreSQL - support for the PostgreSQL wire protocol
 
 =head1 VERSION
 
-version 0.006
+version 0.007
 
 =head1 SYNOPSIS
 

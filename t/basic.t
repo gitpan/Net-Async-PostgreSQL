@@ -1,23 +1,27 @@
 use strict;
 use warnings;
 
-use POSIX qw(SIGTERM SIGKILL);
-use Test::postgresql;
 use Test::More;
+BEGIN {
+	eval { require Test::postgresql; } or Test::More->import(skip_all => 'Test::postgresql is not installed');
+}
+use POSIX qw(SIGTERM SIGKILL);
 
 use IO::Async::Loop;
 use Net::Async::PostgreSQL::Client;
 
 use constant SHUTDOWN_DELAY => 5;
 
-plan tests => 3;
-
 # Start up a PostgreSQL server
 note 'Set up new PG instance';
 my $pg = Test::postgresql->new(
 	initdb_args => $Test::postgresql::Defaults{initdb_args} . ' --encoding=utf8'
-) or die $Test::postgresql::errstr;
+) or Test::More->import(skip_all => 'Could not start PG instance via Test::postgresql: ' . $Test::postgresql::errstr);
+
+# If we get this far, we're running PG and any further failures are most likely our fault.
+
 note "Activated new PG instance with DSN " . $pg->dsn . " and pid " . $pg->pid;
+plan tests => 3;
 
 # Set up the event loop and start our client
 my $loop = IO::Async::Loop->new;
@@ -45,7 +49,7 @@ $dbh->add_handler_for_event(
 	},
 	notice => sub {
 		my ($self, %args) = @_;
-		warn("NOTICE: %s", $args{notice});
+		warn("NOTICE: " . $args{notice});
 		1;
 	},
 	error => sub {
